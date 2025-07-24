@@ -11,7 +11,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
         const accessToken = user.generateAccessToken();
         const refreshToken = user.generateRefreshToken();
 
-        user.refreshToken = refreshToken;   
+        user.refreshToken = refreshToken;
         await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken };
@@ -23,23 +23,17 @@ const generateAccessAndRefreshTokens = async (userId) => {
     }
 };
 
+// Generate Player Id
+const generatePlayerId = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const id = Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+    return `${id}-BEARULL`;
+};
+
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
-    const { phone, firstName, lastName, email, gender, address, state, password } = req.body;
-
-    if ([phone, firstName, lastName, email, gender, address, state, password].some((field) => field?.trim === "")) {
-        throw new ApiError(400, "All fields are required");
-    }
-
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser) {
-        throw new ApiError(401, "User with this email already exist");
-    }
-
-    const user = await User.create({
-        
-        phone,
+    const {
+        mobile,
         firstName,
         lastName,
         email,
@@ -47,6 +41,45 @@ const registerUser = asyncHandler(async (req, res) => {
         address,
         state,
         password,
+    } = req.body;
+
+    if (
+        [
+            mobile,
+            firstName,
+            lastName,
+            email,
+            gender,
+            address,
+            state,
+            password,
+        ].some((field) => field?.trim === "")
+    ) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const existingUserEmail = await User.findOne({ email });
+
+    if (existingUserEmail) {
+        throw new ApiError(401, "User with this email already exist");
+    }
+
+    const existingUserPhone = await User.findOne({ mobile });
+
+    if (existingUserPhone) {
+        throw new ApiError(401, "User with this Phone already exist");
+    }
+
+    const user = await User.create({
+        mobile,
+        firstName,
+        lastName,
+        email,
+        gender,
+        address,
+        state,
+        password,
+        playerId: generatePlayerId(),
     });
 
     const createdUser = await User.findById(user._id).select(
@@ -69,18 +102,18 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // Login User
 const loginUser = asyncHandler(async (req, res) => {
-    const { phone, email, password } = req.body;
+    const { mobile, email, password } = req.body;
 
-    if (!email && !phone) {
+    if (!email && !mobile) {
         throw new ApiError(401, "Email or Phone is required");
     }
 
     const user = await User.findOne({
-        $or: [{phone}, {email}]
-    })
+        $or: [{ mobile }, { email }],
+    });
 
-    if(!user){
-        throw new ApiError(404, "User dose not exist")
+    if (!user) {
+        throw new ApiError(404, "User dose not exist");
     }
 
     if (!user.isActive) {
@@ -92,6 +125,11 @@ const loginUser = asyncHandler(async (req, res) => {
     if (!isPasswrodVaild) {
         throw new ApiError(401, "Invalid user credentials");
     }
+
+    user.lastActive = new Date();
+    await user.save({
+        validateBeforeSave: false,
+    });
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
         user._id
@@ -214,9 +252,7 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
     return res
         .status(200)
-        .json(
-            new ApiResponse(200, {}, "Password changed successfully")
-        );
+        .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 
 module.exports = {

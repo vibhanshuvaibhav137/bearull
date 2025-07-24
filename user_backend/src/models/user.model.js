@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 
 const userScheme = new Schema(
     {
-        phone: {
+        mobile: {
             type: String,
             required: [true, "Phone number is required"],
             match: [/^\d{10}$/, "Please enter a valid 10-digit phone number"],
@@ -57,6 +57,14 @@ const userScheme = new Schema(
             type: Boolean,
             default: true,
         },
+        lastActive: {
+            type: Date,
+            default: null,
+        },
+        playerId: {
+            type: String,
+            default: null,
+        },
         refreshToken: {
             type: String,
         },
@@ -90,7 +98,7 @@ userScheme.methods.generateAccessToken = function () {
             _id: this._id,
             email: this.email,
             name: this.name,
-            phone: this.phone,
+            mobile: this.mobile,
         },
         process.env.ACCESS_TOKEN_SECRET,
         {

@@ -25,20 +25,21 @@ const registerValidation = [
     body("password")
         .isLength({ min: 6 })
         .withMessage("Password must be at least 6 characters"),
-    body("phone")
+    body("mobile")
         .optional()
         .customSanitizer((value) => value.replace(/\D/g, "").replace(/^91/, ""))
         .isLength({ min: 10, max: 10 })
         .withMessage("Please enter a valid 10-digit Indian phone number"),
+    validateRequest,
 ];
 
 const loginValidation = [
     body("email")
-    .optional()
+        .optional()
         .isEmail()
         .normalizeEmail()
         .withMessage("Please enter a valid email"),
-    body("phone")
+    body("mobile")
         .optional()
         .customSanitizer((value) => value.replace(/\D/g, "").replace(/^91/, ""))
         .isLength({ min: 10, max: 10 })
@@ -58,29 +59,28 @@ const changePasswordValidation = [
 ];
 
 const updateProfileValidation = [
-   
     body("firstName")
         .optional()
         .trim()
         .isLength({ min: 2, max: 25 })
         .withMessage("Name must be between 2 and 25 characters"),
     body("lastName")
-    .optional()
+        .optional()
         .trim()
         .isLength({ min: 2, max: 25 })
         .withMessage("Name must be between 2 and 25 characters"),
     body("email")
-    .optional()
+        .optional()
         .isEmail()
         .normalizeEmail()
         .withMessage("Please enter a valid email"),
-    body("phone")
+    body("mobile")
         .optional()
         .customSanitizer((value) => value.replace(/\D/g, "").replace(/^91/, ""))
         .isLength({ min: 10, max: 10 })
         .withMessage("Please enter a valid 10-digit Indian phone number"),
     body("address")
-    .optional()
+        .optional()
         .trim()
         .isLength({ min: 10, max: 250 })
         .withMessage("Address must be between 10 and 250 characters"),
