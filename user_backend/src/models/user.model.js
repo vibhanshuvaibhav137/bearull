@@ -36,14 +36,14 @@ const userScheme = new Schema(
         gender: {
             type: String,
             required: [true, "Gender is required"],
-            enum: ["male", "female", "other"]
+            enum: ["male", "female", "other"],
         },
         state: {
             type: String,
-            required: [true, "State is required"]
+            required: [true, "State is required"],
         },
         address: {
-            type: String
+            type: String,
         },
         password: {
             type: String,
@@ -51,11 +51,28 @@ const userScheme = new Schema(
             minlength: [6, "Password must be at least 6 characters"],
         },
         otp: {
-            type: String
+            type: String,
+        },
+        otpExpiry: {
+            type: Date,
+        },
+        loginOtp: {
+            type: String,
+        },
+        loginOtpSentAt: {
+            type: Date,
+            default: null,
+        },
+        loginOtpExpiry: {
+            type: Date,
+        },
+        isEmailVerified: {
+            type: Boolean,
+            default: false,
         },
         isActive: {
             type: Boolean,
-            default: true,
+            default: false, 
         },
         lastActive: {
             type: Date,
@@ -86,18 +103,18 @@ userScheme.pre("save", async function (next) {
     }
 });
 
-// Instance method: check password
+// Check password
 userScheme.methods.isPasswordCorrect = async function (password) {
     return await bcrypt.compare(password, this.password);
 };
 
-// Instance method: generate access token
+// Generate access token
 userScheme.methods.generateAccessToken = function () {
     return jwt.sign(
         {
             _id: this._id,
             email: this.email,
-            name: this.name,
+            name: this.firstName + " " + this.lastName,
             mobile: this.mobile,
         },
         process.env.ACCESS_TOKEN_SECRET,
@@ -107,7 +124,7 @@ userScheme.methods.generateAccessToken = function () {
     );
 };
 
-// Instance method: generate refresh token
+// Generate refresh token
 userScheme.methods.generateRefreshToken = function () {
     return jwt.sign(
         {
@@ -120,6 +137,5 @@ userScheme.methods.generateRefreshToken = function () {
     );
 };
 
-// Exporting the model
 const User = mongoose.model("User", userScheme);
 module.exports = { User };
